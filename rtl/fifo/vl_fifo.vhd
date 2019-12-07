@@ -104,32 +104,48 @@ begin
   rst_b <= rst_cdc(1);
 
   -- Crossing write addr
-  w_addr_cdc_p : process(i_clk_b)
+  g_w_addr_en_cdc : if G_CDC_EN generate
   begin
-    if rising_edge(i_clk_b) then
-      w_addr_gray_b <= w_addr_gray_b(C_FIFO_CDC_STAGES - 2 downto 0) & bin2gray(w_addr_bin_a);
-      if i_rst = '1' then
-        w_addr_gray_b <= (others => (others => '0'));
+    w_addr_cdc_p : process(i_clk_b)
+    begin
+      if rising_edge(i_clk_b) then
+        w_addr_gray_b <= w_addr_gray_b(C_FIFO_CDC_STAGES - 2 downto 0) & bin2gray(w_addr_bin_a);
+        if i_rst = '1' then
+          w_addr_gray_b <= (others => (others => '0'));
+        end if;
       end if;
-    end if;
-  end process w_addr_cdc_p;
+    end process w_addr_cdc_p;
 
-  w_addr_bin_b  <= gray2bin(w_addr_gray_b(C_FIFO_CDC_STAGES - 1));
+    w_addr_bin_b  <= gray2bin(w_addr_gray_b(C_FIFO_CDC_STAGES - 1));
+  end generate;
+
+  g_w_addr_dis_cdc : if not G_CDC_EN generate
+  begin
+    w_addr_bin_b  <= w_addr_bin_a;
+  end generate;
 
   fifo_empty_b <= '1' when  w_addr_bin_b = r_addr_bin_b else '0';
 
   -- Crossing read addr
-  r_addr_cdc_p : process(i_clk_a)
+  g_r_addr_en_cdc : if G_CDC_EN generate
   begin
-    if rising_edge(i_clk_a) then
-      r_addr_gray_a <= r_addr_gray_a(C_FIFO_CDC_STAGES - 2 downto 0) & bin2gray(r_addr_bin_b);
-      if i_rst = '1' then
-        r_addr_gray_a <= (others => (others => '0'));
+    r_addr_cdc_p : process(i_clk_a)
+    begin
+      if rising_edge(i_clk_a) then
+        r_addr_gray_a <= r_addr_gray_a(C_FIFO_CDC_STAGES - 2 downto 0) & bin2gray(r_addr_bin_b);
+        if i_rst = '1' then
+          r_addr_gray_a <= (others => (others => '0'));
+        end if;
       end if;
-    end if;
-  end process r_addr_cdc_p;
+    end process r_addr_cdc_p;
 
-  r_addr_bin_a  <= gray2bin(r_addr_gray_a(C_FIFO_CDC_STAGES - 1));  -- Adds one extra latency cycle
+    r_addr_bin_a  <= gray2bin(r_addr_gray_a(C_FIFO_CDC_STAGES - 1));  -- Adds one extra latency cycle
+  end generate;
+
+  g_r_addr_dis_cdc : if not G_CDC_EN generate
+  begin
+    r_addr_bin_a  <= r_addr_bin_b;
+  end generate;
 
   fifo_full_a <=  '1' when  w_addr_bin_a(C_ADDR_W - 1 downto 0) = r_addr_bin_a(C_ADDR_W - 1 downto 0) and
                             w_addr_bin_a(C_ADDR_W) /= r_addr_bin_a(C_ADDR_W) else
