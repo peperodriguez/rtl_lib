@@ -54,10 +54,15 @@ package body vl_gen_pkg  is
   
 
   function bin2gray (signal d : std_logic_vector) return std_logic_vector is
-    variable v_res : unsigned(d'length - 1 downto 0) := (others => '0');
+    variable v_res : std_logic_vector(d'length - 1 downto 0) := (others => '0');
   begin
-    v_res := bin2gray(unsigned(d));
-    return std_logic_vector(v_res);
+    v_res(d'length - 1) := d(d'length - 1);
+
+    for k in 0 to d'length - 2 loop
+      v_res(k) := d(k + 1) xor d(k);
+    end loop;
+
+    return v_res;
   end bin2gray;
 
   function gray2bin (signal d : unsigned) return unsigned is
@@ -74,10 +79,15 @@ package body vl_gen_pkg  is
   end gray2bin;
 
   function gray2bin (signal d : std_logic_vector) return std_logic_vector is
-    variable v_res : unsigned(d'length - 1 downto 0) := (others => '0');
+    variable v_res : std_logic_vector(d'length - 1 downto 0) := (others => '0');
   begin
-    v_res := gray2bin(unsigned(d));
-    return std_logic_vector(v_res);
+    v_res(d'length - 1) := d(d'length - 1);
+
+    for k in d'length - 2 downto 0 loop
+      v_res(k) := d(k + 1) xor d(k);
+    end loop;
+
+    return v_res;
   end gray2bin;
 
 end package body;
